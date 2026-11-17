@@ -1,0 +1,27 @@
+# Local env, uv's virtualenv, Python caches, run traces and editor/OS files stay out of git.
+
+# Secrets: any .env file except the template
+.env
+.env.*
+!.env.example
+
+# uv / Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Run traces (tracelogs/<workflow>/workflow<datetime>.md)
+tracelogs/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

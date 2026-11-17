@@ -1,0 +1,17 @@
+# uv project file: dependencies for the FastAPI + LangGraph harness, installed with `uv sync`.
+[project]
+name = "incident-trawlers"
+version = "0.1.0"
+description = "FastAPI + LangGraph agent harness that runs many workflows on one shared agent loop"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings>=2.4",
+    "langgraph>=1.0",
+    "langchain-anthropic>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]  # for sample_project's tests

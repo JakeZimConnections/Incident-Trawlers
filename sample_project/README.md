@@ -1,3 +1,3 @@
 ## Calculator
 
-A tiny calculator module. Run tests with `pytest` from the `sample_project/` directory.
+A tiny calculator module. Run tests with `uv run pytest` from the `sample_project/` directory.

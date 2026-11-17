@@ -1,47 +1,37 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+FastAPI + LangGraph + Claude agent harness: one shared agent loop runs many **workflows**, each picking its own state schema, tools and prompt, triggered over HTTP. Layout follows the fastapi-langgraph-agent-production-ready-template minus its extras (auth, DB, memory, metrics).
 
-## What this is
+**Read `architecture.md` before structural changes, and update it when they happen.**
 
-A LangGraph + Claude (`langchain-anthropic`) agent harness for investigating incidents. One shared agent loop runs many **workflows**, and each workflow picks its own state schema, tools and prompt. `architecture.md` has the full layout, the graph diagram and the "how to add a tool/state/workflow" steps. Read it before making structural changes, and keep it updated when they happen.
-
-This folder is a git submodule of the parent `ML-Apprenticship` repo (`.git` points to `../.git/modules/Incident-Trawlers`).
+This folder is a git submodule of `ML-Apprenticship` (`.git` → `../.git/modules/Incident-Trawlers`).
 
 ## Commands
 
-There is no build, lint or packaging config, and no `requirements.txt`. Dependencies are `langchain-anthropic` and `langgraph`, and `ANTHROPIC_API_KEY` must be set.
+uv is the package manager. Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. Run everything from the repo root (imports are absolute: `from app.core.langgraph import Workflow`).
 
 ```bash
-python3 main.py                              # run the "default" workflow
-python3 main.py zim_incident                 # run a named workflow (choices come from WORKFLOWS)
-python3 main.py zim_incident --prompt "..."  # override the workflow's prompt
+uv sync
+uv run uvicorn app.main:app --reload             # :8000, docs at /docs
+curl -X POST localhost:8000/api/v1/workflows/default/runs -H 'Content-Type: application/json' -d '{"prompt": "..."}'
+cd sample_project && uv run pytest               # test target for the default workflow
 ```
 
-Run from the repo root: imports like `from core import Workflow` and `from tools import TOOLS` rely on the root being on `sys.path`.
+**`sample_project/calculator.divide` is deliberately broken** (`return a + b`) so the default workflow has something to find. Don't fix it unless asked. Leave `sample_project/agent.py`, `LCAgent.py` and `LGAgent.py` (the original reference agents) as they are.
 
-`sample_project/` is a test target, not part of the harness:
+## Rules
 
-```bash
-cd sample_project && pytest                                   # all tests
-cd sample_project && pytest test_calculator.py::test_divide   # one test
-```
-
-**`calculator.divide` is deliberately broken** (`return a + b`), so the default workflow ("run the test suite, explain failures") has something to find. Don't fix it unless asked.
-
-## Architecture: how the pieces connect
-
-- `main.py` → `workflows.WORKFLOWS[name]` → `Workflow.run()` → `core.build_agent(state_schema, tools)` → compiled `StateGraph` looping `call_model ⇄ run_tools` until Claude makes no tool calls.
-- **`core/` is the only place graph wiring lives.** `build_agent` creates the model *inside* the function (`make_model(tools)`), so each workflow's Claude only sees that workflow's tools. Don't reintroduce a module-level model.
-- **Workflows are config, not code.** A `workflows/<name>.py` file defines `WORKFLOW = Workflow(...)` and must be registered in `workflows/__init__.py`, or `main.py` won't see it.
-- **Every state schema must extend `state.AgentState`**, because `call_model` and `should_continue` read `state["messages"]`. Fields other than `messages` need starting values in the workflow's `initial_state`.
-- **`ToolNode` only writes to `messages`.** Custom state fields (e.g. `ZimState.cognito_user`, `stripe_ref`, `kibana_logs`) are only filled if a workflow adds its own node to copy tool results into them. None exists yet.
-- **Keep `core/` thin:** something goes there only once two workflows need it. Logic needed by one workflow stays in that workflow.
-- Tools: one `@tool` function per file in `tools/`, exported from `tools/__init__.py`. Tools catch exceptions and return an `"Error: ..."` string rather than raising, so the agent can see and react to failures.
-
-`sample_project/agent.py` (raw Anthropic SDK), `LCAgent.py` (LangChain `create_agent`) and `LGAgent.py` (LangGraph) are the original reference versions of the same agent. The harness was refactored out of `LGAgent.py`. Leave them as they are.
+- **Routes hold no agent logic.** `app/api/` validates, looks up `WORKFLOWS[name]` and returns `app/schemas/run.py` types.
+- **Graph wiring lives only in `app/core/langgraph/`.** `build_agent` creates the model inside the function, so each workflow's Claude only sees its own tools. Don't add a module-level model.
+- **Keep `app/core/` thin:** add to it only once two workflows need something.
+- **Workflows are config.** `app/workflows/<name>.py` defines `WORKFLOW = Workflow(...)` and must be added to `WORKFLOWS` in `app/workflows/__init__.py`.
+- **State schemas extend `AgentState`** (`app/schemas/graph.py`); extra fields need starting values in `initial_state`. `ToolNode` only writes `messages`, so other fields need a node of their own.
+- **Tools:** one `@tool` per file in `app/core/langgraph/tools/`. Catch exceptions and return `"Error: ..."`, never raise.
+- **Settings:** `app/core/config.settings`, never `os.environ`. New setting → field on `Settings` + line in `.env.example`.
+- **Logging:** use `log(message, level)` from `app/services/trace_logger.py`, never `print`. It goes to the terminal and the current run's trace file.
+- `Workflow.run()` returns `(state, trace)` and writes every step to `tracelogs/<workflow>/workflow<datetime>.md`.
 
 ## Conventions
 
-- Every file starts with a one-line `#` comment saying what the file is and why it's set up that way. Keep this for new files.
+- Every file starts with a one-line `#` comment saying what it is and why it's set up that way.
 - Comments use a single `#`.
