@@ -18,6 +18,7 @@ Incident-Trawlers/
     core/
       config.py             #   Settings from .env
       logging.py            #   terminal logger ("trawlers")
+      monitoring.py         #   LangSmith on/off + one project per workflow
       langgraph/            #   the engine, shared by every workflow
         graph.py            #     build_agent(state_schema, tools)
         workflow.py         #     Workflow dataclass + run()
@@ -92,6 +93,15 @@ log("Found 3 matching users")                  # debug | info | warning | error
 
 - Prints `HH:MM:SS LEVEL [workflow] message` to the terminal.
 - During a run, also adds it to that run's trace. A `ContextVar` (`current_trace`) keeps concurrent runs in their own files.
+
+## LangSmith (monitoring)
+
+**Set `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` in `.env` and every run also goes to LangSmith** (EU: `eu.api.smith.langchain.com`). Off by default; the local trace files work either way.
+
+- **One project per workflow:** `<LANGSMITH_PROJECT>-<workflow>`, e.g. `incident-trawlers-default`. Each gets its own run list and Monitor charts (latency, tokens, errors).
+- Each run is named after its workflow, tagged with it, and carries `model` + `trace_file` as metadata.
+- **Same run id everywhere:** `Workflow.run()` makes it, and it shows in the trace file header, the terminal and `RunResponse.langsmith_run_id` (also in the 502 body).
+- `app/core/monitoring.py` copies the settings into `os.environ` at startup (the SDK only reads env vars); `Workflow.run()` wraps the stream in `tracing_context(project_name=...)`.
 
 ## Adding things
 

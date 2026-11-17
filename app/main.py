@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.monitoring import setup_langsmith
 
 setup_logging()
+setup_langsmith()  # before any graph runs, so LangGraph picks it up
 
 app = FastAPI(title=settings.app_name)
 app.include_router(api_router, prefix=settings.api_v1_prefix)

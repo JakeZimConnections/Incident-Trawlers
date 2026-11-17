@@ -15,6 +15,7 @@ class RunResponse(BaseModel):
     answer: str  # the last message Claude sent
     message_count: int  # how many messages the run produced, including tool calls
     trace_file: str  # tracelogs/<workflow>/workflow<datetime>.md
+    langsmith_run_id: str | None = None  # search this in LangSmith; None when tracing is off
 
 
 class WorkflowInfo(BaseModel):

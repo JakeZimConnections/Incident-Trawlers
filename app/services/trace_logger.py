@@ -38,8 +38,16 @@ def _short(text: str, limit: int = 120) -> str:
 class TraceLogger:
     """Appends each graph step to a Markdown file as the run happens."""
 
-    def __init__(self, workflow_name: str, prompt: str, model: str, initial_state: dict):
+    def __init__(
+        self,
+        workflow_name: str,
+        prompt: str,
+        model: str,
+        initial_state: dict,
+        langsmith: tuple[str, str] | None = None,  # (project, run id) when LangSmith tracing is on
+    ):
         self.workflow = workflow_name
+        self.langsmith_run_id = langsmith[1] if langsmith else None
         folder = Path(settings.tracelog_dir) / workflow_name
         folder.mkdir(parents=True, exist_ok=True)
 
@@ -62,10 +70,13 @@ class TraceLogger:
             f"| Started | {datetime.now():%Y-%m-%d %H:%M:%S} |\n"
             f"| Model | `{model}` |\n"
             + (f"| Initial state | `{json.dumps(extra, default=str)}` |\n" if extra else "")
+            + (f"| LangSmith | project `{langsmith[0]}`, run `{langsmith[1]}` |\n" if langsmith else "")
             + f"\n## Prompt\n\n{prompt}\n"
         )
         logger.info(f"[{self.workflow}] ▶ started · trace: {self.path}")
         logger.info(f"[{self.workflow}]   prompt: {_short(prompt)}")
+        if langsmith:
+            logger.info(f"[{self.workflow}]   langsmith: {langsmith[0]} · run {langsmith[1]}")
 
     def log_update(self, node: str, update: dict | None) -> None:
         """Log what one node returned (one graph step)."""

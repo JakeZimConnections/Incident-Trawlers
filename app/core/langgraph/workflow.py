@@ -1,7 +1,11 @@
 # Workflow dataclass bundling state, tools and prompt, so a new workflow is config, not new graph code.
 from dataclasses import dataclass, field
+from uuid import uuid4
+
+from langsmith import tracing_context
 
 from app.core.config import settings
+from app.core.monitoring import langsmith_enabled, langsmith_project
 from app.services.trace_logger import TraceLogger, current_trace
 
 from .graph import build_agent
@@ -29,23 +33,36 @@ class Workflow:
         prompt = prompt or self.prompt
         state = {**self.initial_state, "messages": [("user", prompt)]}
         limit = self.recursion_limit or settings.recursion_limit
-        trace = TraceLogger(self.name, prompt, self.model_name or settings.default_model, self.initial_state)
+        model = self.model_name or settings.default_model
+        run_id = uuid4()  # same id in the trace file and LangSmith, so one finds the other
+        project = langsmith_project(self.name)
+        langsmith = (project, str(run_id)) if langsmith_enabled() else None
+        trace = TraceLogger(self.name, prompt, model, self.initial_state, langsmith)
+
+        # run_name/tags/metadata label the run in LangSmith; LangSmith ignores them when tracing is off
+        config = {
+            "recursion_limit": limit,
+            "run_id": run_id,
+            "run_name": self.name,
+            "tags": [self.name],
+            "metadata": {"workflow": self.name, "model": model, "trace_file": str(trace.path)},
+        }
 
         final_state = state
         token = current_trace.set(trace)  # log() calls during this run go to this trace
         try:
             # "updates" = what each node returned (for the trace); "values" = the full state after it
-            async for mode, chunk in agent.astream(
-                state, config={"recursion_limit": limit}, stream_mode=["updates", "values"]
-            ):
-                if mode == "updates":
-                    for node, update in chunk.items():
-                        trace.log_update(node, update)
-                else:
-                    final_state = chunk
+            with tracing_context(project_name=project):  # this workflow's LangSmith project
+                async for mode, chunk in agent.astream(state, config=config, stream_mode=["updates", "values"]):
+                    if mode == "updates":
+                        for node, update in chunk.items():
+                            trace.log_update(node, update)
+                    else:
+                        final_state = chunk
         except Exception as e:
             trace.fail(e)
             e.trace_file = str(trace.path)  # so the route can say where the trace is
+            e.langsmith_run_id = trace.langsmith_run_id
             raise
         finally:
             current_trace.reset(token)

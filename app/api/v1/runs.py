@@ -17,8 +17,12 @@ async def run_workflow(name: str, request: RunRequest) -> RunResponse:
     try:
         state, trace = await workflow.run(request.prompt)
     except Exception as e:  # e.g. a model error or hitting the recursion limit
-        trace_file = getattr(e, "trace_file", None)
-        raise HTTPException(status_code=502, detail={"error": f"{type(e).__name__}: {e}", "trace_file": trace_file})
+        detail = {
+            "error": f"{type(e).__name__}: {e}",
+            "trace_file": getattr(e, "trace_file", None),
+            "langsmith_run_id": getattr(e, "langsmith_run_id", None),
+        }
+        raise HTTPException(status_code=502, detail=detail)
 
     messages = state["messages"]
     return RunResponse(
@@ -26,4 +30,5 @@ async def run_workflow(name: str, request: RunRequest) -> RunResponse:
         answer=messages[-1].text,
         message_count=len(messages),
         trace_file=str(trace.path),
+        langsmith_run_id=trace.langsmith_run_id,
     )

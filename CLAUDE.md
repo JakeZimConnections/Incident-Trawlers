@@ -4,6 +4,8 @@ FastAPI + LangGraph + Claude agent harness: one shared agent loop runs many **wo
 
 **Read `architecture.md` before structural changes, and update it when they happen.**
 
+**`setUpInstruction.md` is the setup guide (install, `.env`, LangSmith, run, troubleshooting). Update it whenever you add a tool, service, API key, setting or command someone needs to set up.**
+
 This folder is a git submodule of `ML-Apprenticship` (`.git` → `../.git/modules/Incident-Trawlers`).
 
 ## Commands
@@ -30,6 +32,7 @@ cd sample_project && uv run pytest               # test target for the default w
 - **Settings:** `app/core/config.settings`, never `os.environ`. New setting → field on `Settings` + line in `.env.example`.
 - **Logging:** use `log(message, level)` from `app/services/trace_logger.py`, never `print`. It goes to the terminal and the current run's trace file.
 - `Workflow.run()` returns `(state, trace)` and writes every step to `tracelogs/<workflow>/workflow<datetime>.md`.
+- **LangSmith:** set up only in `app/core/monitoring.py` (the one allowed `os.environ` write) and `Workflow.run()`. Each workflow traces to its own project, `<LANGSMITH_PROJECT>-<workflow>`. Off unless `LANGSMITH_TRACING=true`.
 
 ## Conventions
 

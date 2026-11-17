@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     recursion_limit: int = 20  # graph-level safety limit: each node visit counts as a step
     tracelog_dir: str = "tracelogs"  # one Markdown trace per run: <dir>/<workflow>/workflow<datetime>.md
     log_level: str = "info"  # terminal logging: debug | info | warning | error
+    langsmith_tracing: bool = False  # send every run to LangSmith
+    langsmith_api_key: str = ""
+    langsmith_endpoint: str = "https://eu.api.smith.langchain.com"  # EU region
+    langsmith_project: str = "incident-trawlers"  # prefix: each workflow traces to <prefix>-<workflow>
 
 
 settings = Settings()
