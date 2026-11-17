@@ -1,0 +1,13 @@
+# One service: the API. Keys come from .env; traces land in ./tracelogs on the host.
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./tracelogs:/app/tracelogs  # trace files survive the container and show up locally
+      # Dev: uncomment to edit code without rebuilding, and add "--reload" to the command below
+      # - ./app:/app/app
+    # command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    restart: unless-stopped

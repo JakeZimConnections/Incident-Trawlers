@@ -8,6 +8,8 @@ Everything needed to get Incident-Trawlers running, from a fresh machine to a tr
 |---|---|---|
 | uv | Python package manager; installs Python 3.13 for you | `brew install uv` |
 | git | Repo is a submodule of `ML-Apprenticship` | `git submodule update --init` from the parent repo |
+| Docker Desktop | Optional: run the API in a container | docker.com/products/docker-desktop |
+| Postman | Optional: shared request collection | postman.com/downloads |
 
 ```bash
 uv sync                      # creates .venv and installs everything in pyproject.toml
@@ -61,7 +63,27 @@ curl -X POST localhost:8000/api/v1/workflows/default/runs \
 
 **Check:** a new file appears in `tracelogs/default/`, and (if on) a run in LangSmith project `incident-trawlers-default`.
 
-## 5. Test target
+### Or with Docker
+
+```bash
+docker compose up --build                        # same API on http://localhost:8000
+docker compose down
+```
+
+- Reads keys from `.env` (must exist, even if values are blank).
+- Traces are written to `./tracelogs` on your machine via a volume.
+- **The agent's `run_shell` / `write_file` run inside the container**, so it can't touch your real files.
+- Live code edits: uncomment the `./app` volume and `--reload` command in `docker-compose.yml`.
+
+## 5. Postman
+
+1. Postman → Import → `postman/Incident-Trawlers.postman_collection.json`.
+2. Collection variables: `baseUrl` (default `http://localhost:8000`) and `workflow` (default `default`).
+3. Run any request. Run requests save `lastTraceFile` and `lastLangsmithRunId` to the collection variables.
+
+**Share with the team:** commit the JSON file, or in Postman use Share → Via JSON link / a team workspace. Add a request here whenever a route is added.
+
+## 6. Test target
 
 ```bash
 cd sample_project && uv run pytest               # fails on purpose: calculator.divide is broken
@@ -71,6 +93,8 @@ cd sample_project && uv run pytest               # fails on purpose: calculator.
 
 | Symptom | Fix |
 |---|---|
+| `env file .env not found` (Docker) | `cp .env.example .env` |
+| Postman: `ECONNREFUSED` | Server not running, or `baseUrl` points at the wrong port |
 | `uv: command not found` | `brew install uv`, then open a new terminal |
 | `ModuleNotFoundError: app` | Run from the repo root, not inside `app/` |
 | 502 with `AuthenticationError` | `ANTHROPIC_API_KEY` missing or wrong in `.env` |

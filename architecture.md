@@ -9,6 +9,8 @@ Folder layout follows [fastapi-langgraph-agent-production-ready-template](https:
 ```
 Incident-Trawlers/
   pyproject.toml · .python-version · .env.example   # uv project, Python version, settings template
+  Dockerfile · docker-compose.yml · .dockerignore   # one `api` service, ./tracelogs mounted
+  postman/                  # shareable request collection for every route
   app/
     main.py                 # FastAPI app: mounts /api/v1 + GET /health, sets up logging
     api/v1/

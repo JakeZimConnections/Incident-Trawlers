@@ -17,12 +17,14 @@ uv sync
 uv run uvicorn app.main:app --reload             # :8000, docs at /docs
 curl -X POST localhost:8000/api/v1/workflows/default/runs -H 'Content-Type: application/json' -d '{"prompt": "..."}'
 cd sample_project && uv run pytest               # test target for the default workflow
+docker compose up --build                        # same API in a container, traces in ./tracelogs
 ```
 
 **`sample_project/calculator.divide` is deliberately broken** (`return a + b`) so the default workflow has something to find. Don't fix it unless asked. Leave `sample_project/agent.py`, `LCAgent.py` and `LGAgent.py` (the original reference agents) as they are.
 
 ## Rules
 
+- **New or changed route → update `postman/Incident-Trawlers.postman_collection.json`** so the team's collection stays complete.
 - **Routes hold no agent logic.** `app/api/` validates, looks up `WORKFLOWS[name]` and returns `app/schemas/run.py` types.
 - **Graph wiring lives only in `app/core/langgraph/`.** `build_agent` creates the model inside the function, so each workflow's Claude only sees its own tools. Don't add a module-level model.
 - **Keep `app/core/` thin:** add to it only once two workflows need something.

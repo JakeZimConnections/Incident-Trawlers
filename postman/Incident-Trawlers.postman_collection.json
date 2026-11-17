@@ -1,0 +1,89 @@
+{
+  "info": {
+    "name": "Incident-Trawlers",
+    "description": "FastAPI + LangGraph agent harness. Set the `baseUrl` collection variable (default http://localhost:8000). Start the API with `docker compose up` or `uv run uvicorn app.main:app --reload`. Setup: setUpInstruction.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "workflow", "value": "default" },
+    { "key": "lastTraceFile", "value": "" },
+    { "key": "lastLangsmithRunId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+      ] } }]
+    },
+    {
+      "name": "List workflows",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/workflows" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('is a list', () => pm.expect(pm.response.json()).to.be.an('array'));"
+      ] } }]
+    },
+    {
+      "name": "Run workflow (default prompt)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/v1/workflows/{{workflow}}/runs",
+        "description": "Runs `{{workflow}}` with its built-in prompt. Change the `workflow` variable to run another one. Blocks until the run finishes (can take a minute)."
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "const body = pm.response.json();",
+        "const run = body.detail || body;",
+        "pm.collectionVariables.set('lastTraceFile', run.trace_file || '');",
+        "pm.collectionVariables.set('lastLangsmithRunId', run.langsmith_run_id || '');",
+        "console.log('trace:', run.trace_file, '| langsmith run:', run.langsmith_run_id);"
+      ] } }]
+    },
+    {
+      "name": "Run workflow (custom prompt)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"prompt\": \"List the files in sample_project and summarise what each one does.\"\n}" },
+        "url": "{{baseUrl}}/api/v1/workflows/{{workflow}}/runs"
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));",
+        "const body = pm.response.json();",
+        "const run = body.detail || body;",
+        "pm.collectionVariables.set('lastTraceFile', run.trace_file || '');",
+        "pm.collectionVariables.set('lastLangsmithRunId', run.langsmith_run_id || '');"
+      ] } }]
+    },
+    {
+      "name": "Run zim_incident",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/v1/workflows/zim_incident/runs"
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+      ] } }]
+    },
+    {
+      "name": "Unknown workflow (404)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/v1/workflows/does_not_exist/runs"
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('404 Not Found', () => pm.response.to.have.status(404));"
+      ] } }]
+    }
+  ]
+}

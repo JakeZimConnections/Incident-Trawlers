@@ -1,0 +1,17 @@
+# Keeps secrets, the local venv, caches and traces out of the image.
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+tracelogs/
+.git
+.DS_Store
+.idea/
+.vscode/
+*.md
+!README.md
