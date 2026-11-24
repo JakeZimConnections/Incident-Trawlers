@@ -48,7 +48,7 @@ def run_shell(command: str) -> str:
         return f"Error: {type(e).__name__}: {e}"
 
 model = ChatAnthropic(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5-5",
     max_tokens=16384,
 )
 

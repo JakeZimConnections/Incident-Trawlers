@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     app_name: str = "Incident-Trawlers"
     api_v1_prefix: str = "/api/v1"
     anthropic_api_key: str = ""
-    default_model: str = "claude-sonnet-4-6"
+    default_model: str = "claude-sonnet-5-5"
     recursion_limit: int = 20  # graph-level safety limit: each node visit counts as a step
     tracelog_dir: str = "tracelogs"  # one Markdown trace per run: <dir>/<workflow>/workflow<datetime>.md
     log_level: str = "info"  # terminal logging: debug | info | warning | error

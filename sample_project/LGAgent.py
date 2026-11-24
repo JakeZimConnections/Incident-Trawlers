@@ -53,7 +53,7 @@ def run_shell(command: str) -> str:
 tools = [read_file, write_file, run_shell]
 
 model = ChatAnthropic(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5-5",
     max_tokens=16384,
 ).bind_tools(tools)
 

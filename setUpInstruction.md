@@ -24,7 +24,7 @@ cp .env.example .env
 | Setting | Required | Where to get it |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | **Yes** | console.anthropic.com → API Keys |
-| `DEFAULT_MODEL` | No | Default `claude-sonnet-4-6` |
+| `DEFAULT_MODEL` | No | Default `claude-sonnet-5-5` |
 | `RECURSION_LIMIT` | No | Default `20` node visits per run |
 | `TRACELOG_DIR` | No | Default `tracelogs` |
 | `LOG_LEVEL` | No | `debug` \| `info` \| `warning` \| `error` |
