@@ -4,6 +4,14 @@
 
 Folder layout follows [fastapi-langgraph-agent-production-ready-template](https://github.com/wassim249/fastapi-langgraph-agent-production-ready-template), without auth, database, memory or metrics.
 
+## To run the app
+
+```shell
+uv run uvicorn app.main:app --reload
+```
+
+-- reload -> for hot reloading
+
 ## Layout
 
 ```
@@ -27,13 +35,14 @@ Incident-Trawlers/
         tools/              #     one @tool per file
     schemas/
       run.py                #   API types: RunRequest, RunResponse, WorkflowInfo
-      graph.py              #   state: AgentState (base), ZimState
+      graph.py              #   state: AgentState (base), ZimState, RAK_doc_intel_state
     services/
       llm.py                #   make_model(tools)
       trace_logger.py       #   TraceLogger + log()
     workflows/              #   one config file per workflow + WORKFLOWS registry
   tracelogs/                # gitignored, one Markdown file per run
   sample_project/           # test target + original reference agents
+  doc_intel_inbox/          # drop docs here for rakesh_doc_intel (contents gitignored)
 ```
 
 ## How a request flows
@@ -66,14 +75,14 @@ api/v1/runs.py ──WORKFLOWS[name] (404 if missing)──▶ workflows/<name>.
 
 ## Why it's split like this
 
-| Folder | Why |
-|---|---|
-| `api/` | **Routes only.** Check the request, hand off |
-| `schemas/` | **Types in one place:** API bodies and graph state |
-| `core/langgraph/` | **Write the loop once.** Keep it to what every workflow shares |
-| `services/` | **Shared helpers** the engine calls (model, tracing) |
-| `workflows/` | **New workflow = new config file**, instantly on the API |
-| `tools/` | **Pick-and-mix.** Claude only sees the tools its workflow chose |
+| Folder            | Why                                                             |
+| ----------------- | --------------------------------------------------------------- |
+| `api/`            | **Routes only.** Check the request, hand off                    |
+| `schemas/`        | **Types in one place:** API bodies and graph state              |
+| `core/langgraph/` | **Write the loop once.** Keep it to what every workflow shares  |
+| `services/`       | **Shared helpers** the engine calls (model, tracing)            |
+| `workflows/`      | **New workflow = new config file**, instantly on the API        |
+| `tools/`          | **Pick-and-mix.** Claude only sees the tools its workflow chose |
 
 ## State
 
@@ -107,15 +116,16 @@ log("Found 3 matching users")                  # debug | info | warning | error
 
 ## Adding things
 
-| To add | Do this |
-|---|---|
-| A tool | `app/core/langgraph/tools/<name>.py` with `@tool`, export from its `__init__.py` |
-| A state | Class extending `AgentState` in `app/schemas/graph.py` |
-| A workflow | `app/workflows/<name>.py` with `WORKFLOW = Workflow(...)`, add to `WORKFLOWS` |
-| A route | Router in `app/api/v1/<name>.py`, include it in `app/api/v1/api.py` |
-| A setting | Field on `Settings` in `app/core/config.py` + line in `.env.example` |
+| To add     | Do this                                                                          |
+| ---------- | -------------------------------------------------------------------------------- |
+| A tool     | `app/core/langgraph/tools/<name>.py` with `@tool`, export from its `__init__.py` |
+| A state    | Class extending `AgentState` in `app/schemas/graph.py`                           |
+| A workflow | `app/workflows/<name>.py` with `WORKFLOW = Workflow(...)`, add to `WORKFLOWS`    |
+| A route    | Router in `app/api/v1/<name>.py`, include it in `app/api/v1/api.py`              |
+| A setting  | Field on `Settings` in `app/core/config.py` + line in `.env.example`             |
 
 ## Not built yet
 
 - Runs block: the request waits until the workflow finishes.
 - `zim_incident` has only `read_file` and `run_shell`, and nothing fills `ZimState`'s extra fields yet.
+- `rakesh_doc_intel` only suggests a next workflow in its answer; nothing routes files to it yet, binary files (PDF, images) are classified by name only, and nothing fills `RAK_doc_intel_state`'s `documents`/`errors` yet.

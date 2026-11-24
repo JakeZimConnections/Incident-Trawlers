@@ -21,6 +21,10 @@ dist/
 # Run traces (tracelogs/<workflow>/workflow<datetime>.md)
 tracelogs/
 
+# Documents dropped in for rakesh_doc_intel stay local; only the empty folder is tracked
+doc_intel_inbox/*
+!doc_intel_inbox/.gitkeep
+
 # Editor / OS
 .DS_Store
 .idea/
