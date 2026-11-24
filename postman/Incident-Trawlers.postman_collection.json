@@ -10,6 +10,22 @@
     { "key": "lastTraceFile", "value": "" },
     { "key": "lastLangsmithRunId", "value": "" }
   ],
+  "event": [
+    { "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "// Visualize tab: show a run's Markdown answer formatted instead of as an escaped JSON string.",
+        "const body = pm.response.json();",
+        "const run = body.detail || body;",
+        "if (run && run.answer) {",
+        "  pm.visualizer.set(`",
+        "    <style>body{font-family:sans-serif;padding:12px;line-height:1.5} table{border-collapse:collapse} td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top} pre{background:#f4f4f4;padding:8px;overflow:auto} .meta{color:#666;font-size:12px}</style>",
+        "    <div class=\"meta\">{{workflow}} · {{message_count}} messages · {{trace_file}}</div>",
+        "    <div id=\"answer\">Loading…</div>",
+        "    <script src=\"https://cdn.jsdelivr.net/npm/marked/marked.min.js\"></script>",
+        "    <script>pm.getData((err, d) => { document.getElementById('answer').innerHTML = marked.parse(d.answer); });</script>",
+        "  `, run);",
+        "}"
+    ] } }
+  ],
   "item": [
     {
       "name": "Health",
@@ -68,6 +84,18 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": { "mode": "raw", "raw": "{}" },
         "url": "{{baseUrl}}/api/v1/workflows/zim_incident/runs"
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200 OK', () => pm.response.to.have.status(200));"
+      ] } }]
+    },
+    {
+      "name": "Run rakesh_doc_intel",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "{{baseUrl}}/api/v1/workflows/rakesh_doc_intel/runs"
       },
       "event": [{ "listen": "test", "script": { "exec": [
         "pm.test('200 OK', () => pm.response.to.have.status(200));"

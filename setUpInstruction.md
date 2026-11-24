@@ -61,6 +61,8 @@ curl -X POST localhost:8000/api/v1/workflows/default/runs \
   -H 'Content-Type: application/json' -d '{}'                # run with its default prompt
 ```
 
+To survey documents: put files and folders in `doc_intel_inbox/`, then `POST /api/v1/workflows/rakesh_doc_intel/runs` with `{}`. Its contents are gitignored.
+
 **Check:** a new file appears in `tracelogs/default/`, and (if on) a run in LangSmith project `incident-trawlers-default`.
 
 ### Or with Docker
@@ -80,6 +82,7 @@ docker compose down
 1. Postman → Import → `postman/Incident-Trawlers.postman_collection.json`.
 2. Collection variables: `baseUrl` (default `http://localhost:8000`) and `workflow` (default `default`).
 3. Run any request. Run requests save `lastTraceFile` and `lastLangsmithRunId` to the collection variables.
+4. To read a run's answer formatted, open the response's **Visualize** tab (a collection script renders the Markdown; it loads `marked` from jsDelivr, so it needs internet).
 
 **Share with the team:** commit the JSON file, or in Postman use Share → Via JSON link / a team workspace. Add a request here whenever a route is added.
 
