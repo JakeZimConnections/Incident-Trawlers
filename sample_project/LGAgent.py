@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
+
 @tool
 def read_file(path: str) -> str:
     """Read a file, or list the names in a directory."""
@@ -23,6 +24,7 @@ def read_file(path: str) -> str:
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
 
+
 @tool
 def write_file(path: str, content: str) -> str:
     """Write content to a file, overwriting any existing content."""
@@ -32,6 +34,7 @@ def write_file(path: str, content: str) -> str:
 
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
+
 
 @tool
 def run_shell(command: str) -> str:
@@ -50,21 +53,25 @@ def run_shell(command: str) -> str:
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
 
+
 tools = [read_file, write_file, run_shell]
 
 model = ChatAnthropic(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5-5",
     max_tokens=16384,
 ).bind_tools(tools)
+
 
 class AgentState(TypedDict):
     # This reducer appends new messages instead of replacing old ones.
     messages: Annotated[list[BaseMessage], add_messages]
 
+
 def call_model(state: AgentState) -> dict:
     """Ask Claude for the next response."""
     response = model.invoke(state["messages"])
     return {"messages": [response]}
+
 
 def should_continue(state: AgentState) -> str:
     """Choose the next graph edge after Claude responds."""
@@ -74,6 +81,7 @@ def should_continue(state: AgentState) -> str:
         return "run_tools"
 
     return END
+
 
 builder = StateGraph(AgentState)
 

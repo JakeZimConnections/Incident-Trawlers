@@ -4,12 +4,12 @@ Everything needed to get Incident-Trawlers running, from a fresh machine to a tr
 
 ## 1. Install
 
-| Tool | Why | Install |
-|---|---|---|
-| uv | Python package manager; installs Python 3.13 for you | `brew install uv` |
-| git | Repo is a submodule of `ML-Apprenticship` | `git submodule update --init` from the parent repo |
-| Docker Desktop | Optional: run the API in a container | docker.com/products/docker-desktop |
-| Postman | Optional: shared request collection | postman.com/downloads |
+| Tool           | Why                                                  | Install                                            |
+| -------------- | ---------------------------------------------------- | -------------------------------------------------- |
+| uv             | Python package manager; installs Python 3.13 for you | `brew install uv`                                  |
+| git            | Repo is a submodule of `ML-Apprenticship`            | `git submodule update --init` from the parent repo |
+| Docker Desktop | Optional: run the API in a container                 | docker.com/products/docker-desktop                 |
+| Postman        | Optional: shared request collection                  | postman.com/downloads                              |
 
 ```bash
 uv sync                      # creates .venv and installs everything in pyproject.toml
@@ -21,14 +21,14 @@ uv sync                      # creates .venv and installs everything in pyprojec
 cp .env.example .env
 ```
 
-| Setting | Required | Where to get it |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | **Yes** | console.anthropic.com → API Keys |
-| `DEFAULT_MODEL` | No | Default `claude-sonnet-4-6` |
-| `RECURSION_LIMIT` | No | Default `20` node visits per run |
-| `TRACELOG_DIR` | No | Default `tracelogs` |
-| `LOG_LEVEL` | No | `debug` \| `info` \| `warning` \| `error` |
-| `LANGSMITH_*` | No | See step 3 |
+| Setting             | Required | Where to get it                           |
+| ------------------- | -------- | ----------------------------------------- |
+| `ANTHROPIC_API_KEY` | **Yes**  | console.anthropic.com → API Keys          |
+| `DEFAULT_MODEL`     | No       | Default `claude-sonnet-5-5`               |
+| `RECURSION_LIMIT`   | No       | Default `20` node visits per run          |
+| `TRACELOG_DIR`      | No       | Default `tracelogs`                       |
+| `LOG_LEVEL`         | No       | `debug` \| `info` \| `warning` \| `error` |
+| `LANGSMITH_*`       | No       | See step 3                                |
 
 **Never commit `.env`.** It's gitignored; only `.env.example` is tracked.
 
@@ -94,12 +94,12 @@ cd sample_project && uv run pytest               # fails on purpose: calculator.
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| `env file .env not found` (Docker) | `cp .env.example .env` |
-| Postman: `ECONNREFUSED` | Server not running, or `baseUrl` points at the wrong port |
-| `uv: command not found` | `brew install uv`, then open a new terminal |
-| `ModuleNotFoundError: app` | Run from the repo root, not inside `app/` |
-| 502 with `AuthenticationError` | `ANTHROPIC_API_KEY` missing or wrong in `.env` |
-| 502 with `GraphRecursionError` | Raise `RECURSION_LIMIT` or tighten the prompt |
-| Nothing in LangSmith | `LANGSMITH_TRACING=true`, key set, EU endpoint, server restarted |
+| Symptom                            | Fix                                                              |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `env file .env not found` (Docker) | `cp .env.example .env`                                           |
+| Postman: `ECONNREFUSED`            | Server not running, or `baseUrl` points at the wrong port        |
+| `uv: command not found`            | `brew install uv`, then open a new terminal                      |
+| `ModuleNotFoundError: app`         | Run from the repo root, not inside `app/`                        |
+| 502 with `AuthenticationError`     | `ANTHROPIC_API_KEY` missing or wrong in `.env`                   |
+| 502 with `GraphRecursionError`     | Raise `RECURSION_LIMIT` or tighten the prompt                    |
+| Nothing in LangSmith               | `LANGSMITH_TRACING=true`, key set, EU endpoint, server restarted |

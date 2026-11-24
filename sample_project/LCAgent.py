@@ -5,6 +5,7 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.tools import tool
 from langchain.agents import create_agent
 
+
 @tool
 def read_file(path: str) -> str:
     """Read a file, or list the names in a directory."""
@@ -19,6 +20,7 @@ def read_file(path: str) -> str:
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
 
+
 @tool
 def write_file(path: str, content: str) -> str:
     """Write content to a file, overwriting any existing content."""
@@ -28,6 +30,7 @@ def write_file(path: str, content: str) -> str:
 
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
+
 
 @tool
 def run_shell(command: str) -> str:
@@ -47,8 +50,9 @@ def run_shell(command: str) -> str:
     except Exception as e:
         return f"Error: {type(e).__name__}: {e}"
 
+
 model = ChatAnthropic(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5-5",
     max_tokens=16384,
 )
 
